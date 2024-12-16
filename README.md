@@ -17,8 +17,8 @@ Both should be installed and make sure mongodb is running.
 
 #### First Method
 ```shell
-git clone https://github.com/koolkishan/chat-app-react-nodejs
-cd chat-app-react-nodejs
+git clone https://github.com/LyHoangViet/chat-app-real-time.git
+cd chat-app-real-time
 ```
 Now rename env files from .env.example to .env
 ```shell
@@ -66,3 +66,12 @@ after the build is complete run the containers using the following command
 docker compose up
 ```
 now open localhost:3000 in your browser.
+
+#### Use Ubuntu 24.04 (Option)
+
+Install dependencies with script
+
+```
+cd chat-app-real-time
+./install_dept.sh
+```
