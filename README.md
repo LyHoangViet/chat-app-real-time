@@ -59,11 +59,11 @@ Done! Now open localhost:3000 in your browser.
 - Make sure you are in the root of your project and run the following command.
 
 ```shell
-docker compose build --no-cache
+sudo docker compose build --no-cache
 ```
 after the build is complete run the containers using the following command
 ```shell
-docker compose up
+sudo docker compose up
 ```
 now open localhost:3000 in your browser.
 
