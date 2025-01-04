@@ -11,6 +11,8 @@ Snappy is chat application build with the power of MERN Stack. You can find the 
 ### Requirements
 - [Nodejs](https://nodejs.org/en/download)
 - [Mongodb](https://www.mongodb.com/docs/manual/administration/install-community/)
+- [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/#windows-stable)
+- [Node.js](https://nodejs.org/en/download)
 
 Both should be installed and make sure mongodb is running.
 ### Installation
@@ -33,7 +35,7 @@ cd ..
 Now install the dependencies
 ```shell
 cd server
-yarn
+npm start
 cd ..
 cd public
 yarn
@@ -54,6 +56,15 @@ yarn start
 ```
 Done! Now open localhost:3000 in your browser.
 
+#### Use Ubuntu 24.04 (Option)
+
+Install dependencies with script
+
+```
+cd chat-app-real-time
+./install_dept.sh
+```
+
 #### Second Method
 - This method requires docker and docker-compose to be installed in your system.
 - Make sure you are in the root of your project and run the following command.
@@ -66,12 +77,3 @@ after the build is complete run the containers using the following command
 sudo docker compose up
 ```
 now open localhost:3000 in your browser.
-
-#### Use Ubuntu 24.04 (Option)
-
-Install dependencies with script
-
-```
-cd chat-app-real-time
-./install_dept.sh
-```
