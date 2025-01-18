@@ -11,15 +11,15 @@ app.use(cors());
 app.use(express.json());
 
 mongoose
-  .connect(process.env.MONGO_URL, {
+  .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
   .then(() => {
-    console.log("DB Connetion Successfull");
+    console.log("DB Connection Successful");
   })
   .catch((err) => {
-    console.log(err.message);
+    console.log("DB Connection Error:", err.message);
   });
 
 app.get("/ping", (_req, res) => {
