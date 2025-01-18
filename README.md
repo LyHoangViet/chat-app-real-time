@@ -35,10 +35,10 @@ cd ..
 Now install the dependencies
 ```shell
 cd server
-npm start
+npm install
 cd ..
 cd public
-yarn
+npm install
 ```
 We are almost done, Now just start the development server.
 
