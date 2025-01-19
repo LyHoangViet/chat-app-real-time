@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import Robot from "../assets/robot.gif";
+import Logout from "./Logout";
+
 export default function Welcome() {
   const [userName, setUserName] = useState("");
   useEffect(async () => {
@@ -12,6 +14,9 @@ export default function Welcome() {
   }, []);
   return (
     <Container>
+      <div className="logout-button">
+        <Logout />
+      </div>
       <img src={Robot} alt="" />
       <h1>
         Welcome, <span>{userName}!</span>
@@ -27,10 +32,16 @@ const Container = styled.div`
   align-items: center;
   color: white;
   flex-direction: column;
+  position: relative;
   img {
     height: 20rem;
   }
   span {
     color: #4e0eff;
+  }
+  .logout-button {
+    position: absolute;
+    right: 2rem;
+    top: 2rem;
   }
 `;

@@ -139,6 +139,15 @@ const Container = styled.div`
         font-size: 2rem;
         color: white;
       }
+      transition: all 0.3s ease;
+      &:hover {
+        background-color: #7b68ee;
+        transform: scale(1.05);
+      }
+    }
+    transition: all 0.3s ease;
+    &:focus-within {
+      box-shadow: 0 0 10px rgba(154, 134, 243, 0.4);
     }
   }
 `;

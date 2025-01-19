@@ -160,6 +160,10 @@ const Container = styled.div`
         font-size: 1.1rem;
         border-radius: 1rem;
         color: #d1d1d1;
+        transition: all 0.3s ease;
+        &:hover {
+          transform: translateY(-2px);
+        }
         @media screen and (min-width: 720px) and (max-width: 1080px) {
           max-width: 70%;
         }
@@ -168,13 +172,15 @@ const Container = styled.div`
     .sended {
       justify-content: flex-end;
       .content {
-        background-color: #4f04ff21;
+        background-color: #4f04ff30;
+        box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
       }
     }
     .recieved {
       justify-content: flex-start;
       .content {
-        background-color: #9900ff20;
+        background-color: #9900ff30;
+        box-shadow: -2px 2px 8px rgba(0,0,0,0.1);
       }
     }
   }

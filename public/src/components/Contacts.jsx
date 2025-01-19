@@ -23,7 +23,7 @@ export default function Contacts({ contacts, changeChat }) {
         <Container>
           <div className="brand">
             <img src={Logo} alt="logo" />
-            <h3>snappy</h3>
+            <h3>Duckee</h3>
           </div>
           <div className="contacts">
             {contacts.map((contact, index) => {
@@ -78,8 +78,10 @@ const Container = styled.div`
       height: 2rem;
     }
     h3 {
-      color: white;
+      color: #4e0eff;
       text-transform: uppercase;
+      font-size: 1.5rem;
+      font-weight: bold;
     }
   }
   .contacts {
@@ -106,7 +108,7 @@ const Container = styled.div`
       display: flex;
       gap: 1rem;
       align-items: center;
-      transition: 0.5s ease-in-out;
+      transition: all 0.3s ease;
       .avatar {
         img {
           height: 3rem;
@@ -116,6 +118,10 @@ const Container = styled.div`
         h3 {
           color: white;
         }
+      }
+      &:hover {
+        background-color: #9a86f3;
+        transform: translateX(5px);
       }
     }
     .selected {
@@ -129,6 +135,10 @@ const Container = styled.div`
     justify-content: center;
     align-items: center;
     gap: 2rem;
+    transition: all 0.3s ease;
+    &:hover {
+      background-color: #1a1a4d;
+    }
     .avatar {
       img {
         height: 4rem;

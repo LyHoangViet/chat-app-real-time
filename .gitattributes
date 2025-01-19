@@ -1,0 +1,5 @@
+# Giữ nguyên line endings cho tất cả các file
+* -text
+
+# Hoặc chỉ định cho yarn.lock
+yarn.lock -text 
