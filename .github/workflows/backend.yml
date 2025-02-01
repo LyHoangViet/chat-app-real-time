@@ -40,6 +40,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo systemctl start docker
+            sudo docker network create chat-app-network || true
             sudo docker pull ${{ env.IMAGE_NAME }}
             sudo docker stop ${{ secrets.BACKEND_CONTAINER_NAME }} || true
             sudo docker rm ${{ secrets.BACKEND_CONTAINER_NAME }} || true
