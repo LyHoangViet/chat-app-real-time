@@ -47,6 +47,6 @@ jobs:
             sudo docker pull ${{ env.IMAGE_NAME }}
             
             # Khởi động lại toàn bộ stack
-            cd /path/to/docker-compose
+            cd $DOCKER_COMPOSE_DIR
             sudo docker-compose -f docker-compose.prod.yml down
             sudo docker-compose -f docker-compose.prod.yml up -d
