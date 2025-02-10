@@ -12,7 +12,7 @@ Snappy is chat application build with the power of MERN Stack. You can find the 
 - [Nodejs](https://nodejs.org/en/download)
 - [Mongodb](https://www.mongodb.com/docs/manual/administration/install-community/)
 - [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/#windows-stable)
-- [Node.js](https://nodejs.org/en/download)
+- [Docker](https://docs.docker.com/desktop/setup/install/windows-install/)
 
 Both should be installed and make sure mongodb is running.
 ### Installation
@@ -46,6 +46,8 @@ For Frontend.
 ```shell
 cd public
 yarn start
+# or
+npm start
 ```
 For Backend.
 
@@ -53,6 +55,9 @@ Open another terminal in folder, Also make sure mongodb is running in background
 ```shell
 cd server
 yarn start
+# or
+npm start
+
 ```
 Done! Now open localhost:3000 in your browser.
 
@@ -70,10 +75,6 @@ cd chat-app-real-time
 - Make sure you are in the root of your project and run the following command.
 
 ```shell
-sudo docker compose build --no-cache
-```
-after the build is complete run the containers using the following command
-```shell
-sudo docker compose up
+sudo docker compose up --build
 ```
 now open localhost:3000 in your browser.
