@@ -57,20 +57,31 @@ module.exports.setAvatar = async (req, res, next) => {
   try {
     const userId = req.params.id;
     const avatarImage = req.body.image;
-    const userData = await User.findByIdAndUpdate(
-      userId,
-      {
-        isAvatarImageSet: true,
-        avatarImage,
-      },
-      { new: true }
-    );
+    
+    // Kiểm tra user có tồn tại không
+    const userData = await User.findById(userId);
+    if (!userData) {
+      return res.status(404).json({ 
+        msg: "User not found", 
+        status: false 
+      });
+    }
+
+    // Cập nhật thông tin avatar
+    userData.isAvatarImageSet = true;
+    userData.avatarImage = avatarImage;
+    await userData.save();
+
     return res.json({
       isSet: userData.isAvatarImageSet,
       image: userData.avatarImage,
+      status: true
     });
   } catch (ex) {
-    next(ex);
+    return res.status(500).json({ 
+      msg: "Error updating avatar", 
+      status: false 
+    });
   }
 };
 

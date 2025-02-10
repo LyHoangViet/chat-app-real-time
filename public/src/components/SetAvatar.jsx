@@ -8,7 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import { setAvatarRoute } from "../utils/APIRoutes";
 export default function SetAvatar() {
-  const api = `https://api.multiavatar.com/4645646`;
+  const api = `https://api.dicebear.com/7.x/adventurer/svg?seed=John`;
   const navigate = useNavigate();
   const [avatars, setAvatars] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,26 +28,39 @@ export default function SetAvatar() {
 
   const setProfilePicture = async () => {
     if (selectedAvatar === undefined) {
-      toast.error("Please select an avatar", toastOptions);
-    } else {
-      const user = await JSON.parse(
-        localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-      );
+      toast.error("Please select an avatar");
+      return;
+    }
+
+    try {
+      const user = JSON.parse(localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY));
+      if (!user) {
+        navigate("/login");
+        return;
+      }
 
       const { data } = await axios.post(`${setAvatarRoute}/${user._id}`, {
-        image: avatars[selectedAvatar],
+        image: avatars[selectedAvatar]
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (data.isSet) {
         user.isAvatarImageSet = true;
         user.avatarImage = data.image;
-        localStorage.setItem(
-          process.env.REACT_APP_LOCALHOST_KEY,
-          JSON.stringify(user)
-        );
+        localStorage.setItem(process.env.REACT_APP_LOCALHOST_KEY, JSON.stringify(user));
         navigate("/");
       } else {
-        toast.error("Error setting avatar. Please try again.", toastOptions);
+        toast.error("Error setting avatar");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      if (error.response?.status === 404) {
+        toast.error("User not found");
+      } else {
+        toast.error("Error setting avatar");
       }
     }
   };
@@ -76,22 +89,18 @@ export default function SetAvatar() {
             <h1>Pick an Avatar as your profile picture</h1>
           </div>
           <div className="avatars">
-            {avatars.map((avatar, index) => {
-              return (
-                <div
-                  className={`avatar ${
-                    selectedAvatar === index ? "selected" : ""
-                  }`}
-                >
-                  <img
-                    src={`data:image/svg+xml;base64,${avatar}`}
-                    alt="avatar"
-                    key={avatar}
-                    onClick={() => setSelectedAvatar(index)}
-                  />
-                </div>
-              );
-            })}
+            {avatars.map((avatar, index) => (
+              <div
+                key={`avatar-${index}`}
+                className={`avatar ${selectedAvatar === index ? "selected" : ""}`}
+                onClick={() => setSelectedAvatar(index)}
+              >
+                <img
+                  src={`data:image/svg+xml;base64,${avatar}`}
+                  alt={`Avatar ${index}`}
+                />
+              </div>
+            ))}
           </div>
           <button onClick={setProfilePicture} className="submit-btn">
             Set as Profile Picture
