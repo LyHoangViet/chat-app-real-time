@@ -1,8 +1,8 @@
 name: Setup Infrastructure
 
 on:
-  workflow_dispatch:  # Cho phép chạy thủ công khi cần
-  workflow_call:      # Cho phép được gọi từ workflow khác
+  workflow_dispatch:
+  workflow_call:
 
 jobs:
   setup:
@@ -61,6 +61,6 @@ jobs:
                 exit 1
             fi
             EOL
-            
-            chmod +x install-docker.sh
-            ./install-docker.sh
+
+            # Chạy script trực tiếp từ heredoc
+            bash install-docker.sh
