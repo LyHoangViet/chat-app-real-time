@@ -39,6 +39,10 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+
+            chmod +x ./install_dept_prod.sh
+            ./install_dept_prod.sh
+
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
             export TAG=${{ github.ref_name }}
             export REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}
