@@ -6,16 +6,10 @@ on:
       - '*'
 
 jobs:
-  setup-infra:
-    uses: ./.github/workflows/setup-infra.yml
-    secrets: inherit
-
   frontend:
-    needs: setup-infra
     uses: ./.github/workflows/frontend.yml
     secrets: inherit
 
   backend:
-    needs: setup-infra
     uses: ./.github/workflows/backend.yml
     secrets: inherit
