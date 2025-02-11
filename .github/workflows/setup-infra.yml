@@ -61,3 +61,6 @@ jobs:
                 exit 1
             fi
             EOL
+            
+            chmod +x install-docker.sh
+            ./install-docker.sh
