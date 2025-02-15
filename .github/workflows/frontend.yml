@@ -44,12 +44,12 @@ jobs:
             export REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}
             export CLIENT_URL=${{ secrets.CLIENT_URL }}
 
-            # Tạo mạng Docker
-            sudo docker network create app-network || true
+            # Tạo mạng Docker nếu chưa tồn tại
+            sudo docker network create chat-app-real-time_app-network || true
             
             sudo docker pull ${{ env.IMAGE_NAME }}
             
             # Khởi động lại container mới
             sudo docker stop ${{ secrets.FRONTEND_CONTAINER_NAME }} || true
             sudo docker rm ${{ secrets.FRONTEND_CONTAINER_NAME }} || true
-            sudo docker run -d --name ${{ secrets.FRONTEND_CONTAINER_NAME }} --network app-network -p 3000:3000 -e REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }} ${{ env.IMAGE_NAME }}
+            sudo docker run -d --name ${{ secrets.FRONTEND_CONTAINER_NAME }} --network chat-app-real-time_app-network -p 3000:3000 -e REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }} ${{ env.IMAGE_NAME }}

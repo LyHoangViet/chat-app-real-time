@@ -43,14 +43,14 @@ jobs:
             export TAG=${{ github.ref_name }}
             export REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}
             export CLIENT_URL=${{ secrets.CLIENT_URL }}
-            export MONGODB_URI=${{ secrets.MONGODB_URI }}
+            export MONGODB_URI=mongodb://chat-app-real-time-mongodb-1:27017/chat-app
 
-            # Tạo mạng Docker
-            sudo docker network create app-network || true
+            # Tạo mạng Docker nếu chưa tồn tại
+            sudo docker network create chat-app-real-time_app-network || true
             
             sudo docker pull ${{ env.IMAGE_NAME }}
             
             # Khởi động lại container mới
             sudo docker stop ${{ secrets.BACKEND_CONTAINER_NAME }} || true
             sudo docker rm ${{ secrets.BACKEND_CONTAINER_NAME }} || true
-            sudo docker run -d --name ${{ secrets.BACKEND_CONTAINER_NAME }} --network app-network -p ${{ secrets.BACKEND_PORT }}:5000 -e MONGODB_URI=${{ secrets.MONGODB_URI }} ${{ env.IMAGE_NAME }}
+            sudo docker run -d --name ${{ secrets.BACKEND_CONTAINER_NAME }} --network chat-app-real-time_app-network -p ${{ secrets.BACKEND_PORT }}:5000 -e MONGODB_URI=${{ secrets.MONGODB_URI }} ${{ env.IMAGE_NAME }}
