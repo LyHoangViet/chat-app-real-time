@@ -43,10 +43,13 @@ jobs:
             export TAG=${{ github.ref_name }}
             export REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}
             export CLIENT_URL=${{ secrets.CLIENT_URL }}
+
+            # Tạo mạng Docker
+            sudo docker network create app-network || true
             
             sudo docker pull ${{ env.IMAGE_NAME }}
             
             # Khởi động lại container mới
             sudo docker stop ${{ secrets.FRONTEND_CONTAINER_NAME }} || true
             sudo docker rm ${{ secrets.FRONTEND_CONTAINER_NAME }} || true
-            sudo docker run -d --name ${{ secrets.FRONTEND_CONTAINER_NAME }} -p 3000:3000 ${{ env.IMAGE_NAME }}
+            sudo docker run -d --name ${{ secrets.FRONTEND_CONTAINER_NAME }} --network app-network -p 3000:3000 -e REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }} ${{ env.IMAGE_NAME }}
