@@ -53,9 +53,12 @@ jobs:
             # Khởi động lại container mới
             sudo docker stop ${{ secrets.BACKEND_CONTAINER_NAME }} || true
             sudo docker rm ${{ secrets.BACKEND_CONTAINER_NAME }} || true
-            sudo docker run -d --name ${{ secrets.BACKEND_CONTAINER_NAME }} \
+            echo "CLIENT_URL: ${{ secrets.CLIENT_URL }}"
+            sudo docker run -d \
+              --name ${{ secrets.BACKEND_CONTAINER_NAME }} \
               --network chat-app-real-time_app-network \
               -p ${{ secrets.BACKEND_PORT }}:5000 \
               -e PORT=5000 \
+              -e CLIENT_URL=${{ secrets.CLIENT_URL }} \
               -e MONGODB_URI=${{ secrets.MONGODB_URI }} \
               ${{ env.IMAGE_NAME }}
