@@ -53,7 +53,6 @@ jobs:
             # Khởi động lại container mới
             sudo docker stop ${{ secrets.BACKEND_CONTAINER_NAME }} || true
             sudo docker rm ${{ secrets.BACKEND_CONTAINER_NAME }} || true
-            echo "CLIENT_URL: ${{ secrets.CLIENT_URL }}"
             sudo docker run -d \
               --name ${{ secrets.BACKEND_CONTAINER_NAME }} \
               --network chat-app-real-time_app-network \
