@@ -52,4 +52,10 @@ jobs:
             # Khởi động lại container mới
             sudo docker stop ${{ secrets.FRONTEND_CONTAINER_NAME }} || true
             sudo docker rm ${{ secrets.FRONTEND_CONTAINER_NAME }} || true
-            sudo docker run -d --name ${{ secrets.FRONTEND_CONTAINER_NAME }} --network chat-app-real-time_app-network -p 3000:3000 -e REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }} ${{ env.IMAGE_NAME }}
+            sudo docker run -d \
+              --name ${{ secrets.FRONTEND_CONTAINER_NAME }} \
+              --network chat-app-real-time_app-network \
+              -p 3000:3000 \
+              -e REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }} \
+              -e REACT_APP_LOCALHOST_KEY=chat-app-current-user \
+              ${{ env.IMAGE_NAME }}
