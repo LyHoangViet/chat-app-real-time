@@ -8,7 +8,9 @@ const socket = require("socket.io");
 require("dotenv").config();
 
 app.use(cors());
-app.use(express.json());
+// Tăng giới hạn kích thước dữ liệu JSON để xử lý hình ảnh Base64
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
@@ -29,7 +31,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
 const server = app.listen(process.env.PORT, () =>
-  console.log(`Server started on ${process.env.PORT}`)
+  console.log(`Server started on \${process.env.PORT}`)
 );
 const io = socket(server, {
   cors: {
@@ -49,6 +51,17 @@ io.on("connection", (socket) => {
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("msg-recieve", data.msg);
+    }
+  });
+
+  // Xử lý sự kiện gửi hình ảnh
+  socket.on("send-image", (data) => {
+    const sendUserSocket = onlineUsers.get(data.to);
+    if (sendUserSocket) {
+      socket.to(sendUserSocket).emit("image-receive", {
+        image: data.image,
+        from: data.from
+      });
     }
   });
 });

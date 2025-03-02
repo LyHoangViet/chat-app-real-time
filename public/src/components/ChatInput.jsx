@@ -3,10 +3,14 @@ import { BsEmojiSmileFill } from "react-icons/bs";
 import { IoMdSend } from "react-icons/io";
 import styled from "styled-components";
 import Picker from "emoji-picker-react";
+import IconImage from "../assets/icon_image.png"; // Nhập hình ảnh
 
 export default function ChatInput({ handleSendMsg }) {
   const [msg, setMsg] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [image, setImage] = useState(null);
+  const [imageFileName, setImageFileName] = useState("");
+
   const handleEmojiPickerhideShow = () => {
     setShowEmojiPicker(!showEmojiPicker);
   };
@@ -19,10 +23,37 @@ export default function ChatInput({ handleSendMsg }) {
 
   const sendChat = (event) => {
     event.preventDefault();
+    
+    if (image) {
+      handleSendMsg(image, "image");
+      setImage(null);
+      setImageFileName("");
+    }
+    
     if (msg.length > 0) {
-      handleSendMsg(msg);
+      handleSendMsg(msg, "text");
       setMsg("");
     }
+  };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Thêm tên file vào tin nhắn
+      setImageFileName(file.name);
+      
+      // Chuyển đổi hình ảnh thành base64
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImage(e.target.result); // Lưu hình ảnh dưới dạng base64
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImage(null);
+    setImageFileName("");
   };
 
   return (
@@ -33,13 +64,32 @@ export default function ChatInput({ handleSendMsg }) {
           {showEmojiPicker && <Picker onEmojiClick={handleEmojiClick} />}
         </div>
       </div>
-      <form className="input-container" onSubmit={(event) => sendChat(event)}>
+      <form className="input-container" onSubmit={sendChat}>
+        {imageFileName ? (
+          <div className="selected-image-info">
+            <span className="image-name">{imageFileName}</span>
+            <button type="button" className="remove-image" onClick={removeImage}>
+              ✕
+            </button>
+          </div>
+        ) : (
+          <input
+            type="text"
+            placeholder="type your message here"
+            onChange={(e) => setMsg(e.target.value)}
+            value={msg}
+          />
+        )}
         <input
-          type="text"
-          placeholder="type your message here"
-          onChange={(e) => setMsg(e.target.value)}
-          value={msg}
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          style={{ display: "none" }}
+          id="imageInput"
         />
+        <label htmlFor="imageInput" className="image-button">
+        <img src={imageFileName ? imageFileName : IconImage} style={{ width: "24px", height: "24px" }} />
+        </label>
         <button type="submit">
           <IoMdSend />
         </button>
@@ -105,6 +155,8 @@ const Container = styled.div`
     align-items: center;
     gap: 2rem;
     background-color: #ffffff34;
+    padding: 0.3rem;
+    
     input {
       width: 90%;
       height: 60%;
@@ -121,6 +173,58 @@ const Container = styled.div`
         outline: none;
       }
     }
+    
+    .selected-image-info {
+      display: flex;
+      align-items: center;
+      width: 90%;
+      padding: 0.5rem 1rem;
+      
+      .image-name {
+        color: white;
+        font-size: 1rem;
+        max-width: calc(100% - 30px);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .remove-image {
+        margin-left: 10px;
+        background: transparent;
+        border: none;
+        color: #f66;
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 0 5px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+      }
+    }
+    
+    .image-button {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      img {
+        width: 24px;
+        height: 24px;
+        transition: transform 0.2s ease;
+      }
+      
+      &:hover img {
+        transform: scale(1.1);
+      }
+    }
+    
     button {
       padding: 0.3rem 2rem;
       border-radius: 2rem;
