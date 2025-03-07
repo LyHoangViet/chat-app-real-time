@@ -4,12 +4,13 @@ import ChatInput from "./ChatInput";
 import Logout from "./Logout";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import { sendMessageRoute, recieveMessageRoute } from "../utils/APIRoutes";
+import { sendMessageRoute, recieveMessageRoute, deleteMessageRoute } from "../utils/APIRoutes";
 
 export default function ChatContainer({ currentChat, socket }) {
   const [messages, setMessages] = useState([]);
   const scrollRef = useRef();
   const [arrivalMessage, setArrivalMessage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -44,52 +45,49 @@ export default function ChatContainer({ currentChat, socket }) {
       localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
     );
     
-    // Gửi cả type qua socket để xác định loại tin nhắn
     socket.current.emit("send-msg", {
       to: currentChat._id,
       from: data._id,
       msg,
-      type, // Thêm type để phân biệt loại tin nhắn
+      type,
     });
     
-    // Gửi cả type lên server API
-    await axios.post(sendMessageRoute, {
+    // Gửi tin nhắn và lấy response từ server
+    const response = await axios.post(sendMessageRoute, {
       from: data._id,
       to: currentChat._id,
       message: msg,
       type: type
     });
 
+    // Thêm tin nhắn mới với _id từ response
     const msgs = [...messages];
-    msgs.push({ fromSelf: true, message: msg, type: type });
+    msgs.push({ 
+      fromSelf: true, 
+      message: msg, 
+      type: type,
+      _id: response.data.messageId // Thêm _id từ response
+    });
     setMessages(msgs);
   };
 
   useEffect(() => {
     if (socket.current) {
-      socket.current.on("msg-recieve", (data) => {        
-        // Xử lý đa dạng định dạng dữ liệu từ socket
-        if (typeof data === 'object') {
-          // Nếu là object có type
-          setArrivalMessage({
-            fromSelf: false,
-            message: data.msg || data.message,
-            type: data.type || "text"
-          });
-        } else {
-          // Nếu là string đơn giản (cũ)
-          setArrivalMessage({
-            fromSelf: false,
-            message: data,
-            type: data.startsWith && data.startsWith('data:image') ? "image" : "text"
-          });
-        }
+      socket.current.on("msg-recieve", (msg) => {
+        setArrivalMessage({ fromSelf: false, message: msg });
+      });
+
+      // Thêm listener cho sự kiện msg-deleted
+      socket.current.on("msg-deleted", (messageId) => {
+        setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
       });
     }
-    
+
+    // Cleanup function
     return () => {
       if (socket.current) {
         socket.current.off("msg-recieve");
+        socket.current.off("msg-deleted"); // Đừng quên cleanup
       }
     };
   }, []);
@@ -117,6 +115,27 @@ export default function ChatContainer({ currentChat, socket }) {
     if (avatarImage.startsWith('data:')) return avatarImage;
     
     return `data:image/svg+xml;base64,${avatarImage}`;
+  };
+
+  // Thêm hàm xử lý xóa tin nhắn
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      if (!messageId) return;
+      const response = await axios.delete(`${deleteMessageRoute}/${messageId}`);
+      
+      if (response.status === 200) {
+        // Xóa tin nhắn ở phía người gửi
+        setMessages(prev => prev.filter(msg => msg._id !== messageId));
+        
+        // Gửi sự kiện xóa tới người nhận
+        socket.current.emit("delete-msg", {
+          to: currentChat._id,
+          messageId: messageId
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting message:", error.response?.data || error.message);
+    }
   };
 
   return (
@@ -147,18 +166,15 @@ export default function ChatContainer({ currentChat, socket }) {
         {messages.map((message) => {
           const isImage = isImageMessage(message);
           return (
-            <div ref={scrollRef} key={uuidv4()}>
-              <div
-                className={`message ${
-                  message.fromSelf ? "sended" : "recieved"
-                }`}
-              >
+            <div ref={scrollRef} key={message._id || uuidv4()}>
+              <div className={`message ${message.fromSelf ? "sended" : "recieved"}`}>
                 <div className={`content ${isImage ? 'image-content' : ''}`}>
                   {isImage ? (
                     <img 
                       src={message.message} 
                       alt="Chat content"
                       className="chat-image"
+                      onClick={() => setSelectedImage(message.message)}
                       onError={(e) => {
                         console.error("Image load failed");
                         e.target.onerror = null;
@@ -168,6 +184,14 @@ export default function ChatContainer({ currentChat, socket }) {
                   ) : (
                     <p>{message.message}</p>
                   )}
+                  {message.fromSelf && (
+                    <button 
+                      className="delete-btn"
+                      onClick={() => handleDeleteMessage(message._id)}
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -175,6 +199,15 @@ export default function ChatContainer({ currentChat, socket }) {
         })}
       </div>
       <ChatInput handleSendMsg={handleSendMsg} />
+
+      {selectedImage && (
+        <ImageModal>
+          <div className="modal-content">
+            <span className="close-button" onClick={() => setSelectedImage(null)}>×</span>
+            <img src={selectedImage} alt="Enlarged view" />
+          </div>
+        </ImageModal>
+      )}
     </Container>
   );
 }
@@ -239,6 +272,7 @@ const Container = styled.div`
         @media screen and (min-width: 720px) and (max-width: 1080px) {
           max-width: 70%;
         }
+        position: relative;
       }
 
       .image-content {
@@ -251,6 +285,31 @@ const Container = styled.div`
           border-radius: 1rem;
           object-fit: contain;
         }
+      }
+
+      .delete-btn {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.3);
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        
+        &:hover {
+          background-color: rgba(255, 0, 0, 0.6);
+        }
+      }
+      
+      &:hover .delete-btn {
+        display: flex;
       }
     }
     .sended {
@@ -265,6 +324,45 @@ const Container = styled.div`
       .content {
         background-color: #9900ff30;
         box-shadow: -2px 2px 8px rgba(0,0,0,0.1);
+      }
+    }
+  }
+`;
+
+const ImageModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+
+  .modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+
+    img {
+      max-width: 100%;
+      max-height: 90vh;
+      object-fit: contain;
+    }
+
+    .close-button {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+      padding: 5px;
+      
+      &:hover {
+        color: #ddd;
       }
     }
   }

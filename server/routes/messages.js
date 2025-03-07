@@ -23,8 +23,13 @@ router.post("/addmsg", async (req, res, next) => {
     
     const data = await Messages.create(messageData);
 
-    if (data) return res.json({ msg: "Message added successfully." });
-    else return res.json({ msg: "Failed to add message to the database" });
+    if (data) {
+      return res.json({ 
+        msg: "Message added successfully.",
+        messageId: data._id // Trả về _id của tin nhắn
+      });
+    }
+    return res.json({ msg: "Failed to add message to the database" });
   } catch (ex) {
     next(ex);
   }
@@ -42,6 +47,7 @@ router.post("/getmsg", async (req, res, next) => {
 
     const projectedMessages = messages.map((msg) => {
       return {
+        _id: msg._id,
         fromSelf: msg.sender.toString() === from,
         type: msg.message.type,
         message: msg.message.type === "image" ? msg.message.image : msg.message.text,
@@ -51,6 +57,19 @@ router.post("/getmsg", async (req, res, next) => {
     res.json(projectedMessages);
   } catch (ex) {
     next(ex);
+  }
+});
+
+// Thêm route xóa tin nhắn
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    const messageId = req.params.id;
+    console.log("Deleting message with ID:", messageId);
+    await Messages.findByIdAndDelete(messageId);
+    res.status(200).json({ msg: "Message deleted successfully" });
+  } catch (err) {
+    console.error("Delete error:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 

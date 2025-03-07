@@ -64,4 +64,13 @@ io.on("connection", (socket) => {
       });
     }
   });
+
+  // Trong phần xử lý socket
+  socket.on("delete-msg", (data) => {
+    const sendUserSocket = onlineUsers.get(data.to);
+    if (sendUserSocket) {
+      // Gửi sự kiện xóa tới người nhận
+      io.to(sendUserSocket).emit("msg-deleted", data.messageId);
+    }
+  });
 });
