@@ -1,5 +1,54 @@
 @import url("https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap");
 
+:root {
+  /* Color Palette */
+  --primary-color: #4e0eff;
+  --primary-light: #997af0;
+  --primary-dark: #3a0cbb;
+  --secondary-color: #00bcd4;
+  --accent-color: #ff7043;
+  
+  /* Background Colors */
+  --background-dark: #131324;
+  --background-light: #00000076;
+  --background-lighter: #1a1a3a;
+  
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted: #8a8a8a;
+  
+  /* Status Colors */
+  --online: #4caf50;
+  --offline: #9e9e9e;
+  --busy: #f44336;
+  --away: #ff9800;
+  --error: #f44336;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+  
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* Border Radius */
+  --radius-sm: 0.4rem;
+  --radius-md: 1rem;
+  --radius-lg: 2rem;
+  
+  /* Font Sizes */
+  --font-xs: 0.75rem;
+  --font-sm: 0.875rem;
+  --font-md: 1rem;
+  --font-lg: 1.25rem;
+  --font-xl: 1.5rem;
+  --font-2xl: 2rem;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -9,15 +58,125 @@
 body,
 button,
 input {
-  font-family: "Josefin Sans", sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 
 body {
   max-height: 100vh;
   max-width: 100vw;
   overflow: hidden;
+  background-color: var(--background-dark);
 }
 
 .Toastify__toast-theme--dark {
   background-color: #00000076 !important;
+}
+
+button {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+input {
+  font-family: inherit;
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 0.4rem;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--primary-light);
+  border-radius: var(--radius-md);
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--background-lighter);
+}
+
+/* Button Styles */
+.btn {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: bold;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  text-transform: uppercase;
+  font-size: var(--font-md);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--text-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* Form Styles */
+.form-control {
+  width: 100%;
+  padding: 1rem;
+  border: 0.1rem solid var(--primary-color);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--text-primary);
+  font-size: var(--font-md);
+  transition: var(--transition-normal);
+}
+
+.form-control:focus {
+  border-color: var(--primary-light);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(78, 14, 255, 0.2);
+}
+
+/* Card Styles */
+.card {
+  background-color: var(--background-light);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
 }

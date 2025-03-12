@@ -66,27 +66,50 @@ export default function Login() {
       <FormContainer>
         <form action="" onSubmit={(event) => handleSubmit(event)}>
           <div className="brand">
-            <img src={Logo} alt="logo" />
+            <img src={Logo} alt="logo" className="logo-animation" />
             <h1>Duckee</h1>
           </div>
-          <input
-            type="text"
-            placeholder="Username"
-            name="username"
-            onChange={(e) => handleChange(e)}
-            min="3"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            name="password"
-            onChange={(e) => handleChange(e)}
-            required
-          />
-          <button type="submit">Log In</button>
-          <span>
-            Don't have an account ? <Link to="/register">Create One.</Link>
+          <div className="form-group">
+            <label htmlFor="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              placeholder="Enter your username"
+              name="username"
+              onChange={(e) => handleChange(e)}
+              min="3"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              placeholder="Enter your password"
+              name="password"
+              onChange={(e) => handleChange(e)}
+              required
+            />
+          </div>
+          <div className="remember-forgot">
+            <div className="remember-me">
+              <input type="checkbox" id="remember" />
+              <label htmlFor="remember">Remember me</label>
+            </div>
+            <a href="#" className="forgot-password">Forgot Password?</a>
+          </div>
+          <button type="submit" className="submit-btn">Log In</button>
+          <div className="social-login">
+            <p>Or login with</p>
+            <div className="social-icons">
+              <button type="button" className="social-icon google">G</button>
+              <button type="button" className="social-icon facebook">f</button>
+              <button type="button" className="social-icon twitter">t</button>
+            </div>
+          </div>
+          <span className="switch-form">
+            Don't have an account? <Link to="/register">Create One</Link>
           </span>
         </form>
       </FormContainer>
@@ -101,70 +124,245 @@ const FormContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 1rem;
   align-items: center;
-  background-color: #131324;
+  background-color: var(--background-dark);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: "";
+    position: absolute;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle, var(--primary-dark) 0%, transparent 70%);
+    opacity: 0.1;
+    top: -25%;
+    left: -25%;
+    z-index: 0;
+    animation: pulse 15s infinite;
+  }
+
   .brand {
     display: flex;
     align-items: center;
     gap: 1rem;
     justify-content: center;
+    margin-bottom: 1rem;
+    
     img {
       height: 5rem;
+      animation: float 3s ease-in-out infinite;
     }
+    
     h1 {
-      color: #4e0eff;
+      color: var(--primary-color);
       text-transform: uppercase;
-      font-size: 2rem;
+      font-size: var(--font-2xl);
       font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
   }
 
   form {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
-    background-color: #00000076;
-    border-radius: 2rem;
-    padding: 5rem;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  }
-  input {
-    background-color: transparent;
-    padding: 1rem;
-    border: 0.1rem solid #4e0eff;
-    border-radius: 0.4rem;
-    color: white;
+    gap: 1.5rem;
+    background-color: var(--background-light);
+    border-radius: var(--radius-lg);
+    padding: 3rem 5rem;
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(10px);
+    transition: var(--transition-normal);
+    z-index: 1;
     width: 100%;
-    font-size: 1rem;
-    &:focus {
-      border: 0.1rem solid #997af0;
-      outline: none;
+    max-width: 500px;
+    animation: slideUp 0.5s ease;
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      
+      label {
+        color: var(--text-primary);
+        font-size: var(--font-sm);
+        font-weight: 500;
+      }
+    }
+    
+    .remember-forgot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      .remember-me {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        
+        input[type="checkbox"] {
+          accent-color: var(--primary-color);
+          width: auto;
+        }
+        
+        label {
+          color: var(--text-secondary);
+          font-size: var(--font-sm);
+        }
+      }
+      
+      .forgot-password {
+        color: var(--primary-light);
+        font-size: var(--font-sm);
+        text-decoration: none;
+        transition: var(--transition-normal);
+        
+        &:hover {
+          color: var(--primary-color);
+          text-decoration: underline;
+        }
+      }
+    }
+    
+    .social-login {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.5rem;
+      
+      p {
+        color: var(--text-secondary);
+        font-size: var(--font-sm);
+        position: relative;
+        width: 100%;
+        text-align: center;
+        
+        &::before, &::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          width: 35%;
+          height: 1px;
+          background-color: var(--text-muted);
+        }
+        
+        &::before {
+          left: 0;
+        }
+        
+        &::after {
+          right: 0;
+        }
+      }
+      
+      .social-icons {
+        display: flex;
+        gap: 1rem;
+        
+        .social-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          font-weight: bold;
+          cursor: pointer;
+          transition: var(--transition-normal);
+          border: none;
+          
+          &:hover {
+            transform: translateY(-3px);
+          }
+          
+          &.google {
+            background-color: #DB4437;
+            color: white;
+          }
+          
+          &.facebook {
+            background-color: #4267B2;
+            color: white;
+          }
+          
+          &.twitter {
+            background-color: #1DA1F2;
+            color: white;
+          }
+        }
+      }
     }
   }
-  button {
-    background-color: #4e0eff;
+  
+  input {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border: 0.1rem solid var(--primary-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    width: 100%;
+    font-size: var(--font-md);
+    transition: var(--transition-normal);
+    
+    &:focus {
+      border: 0.1rem solid var(--primary-light);
+      outline: none;
+      box-shadow: 0 0 10px rgba(78, 14, 255, 0.3);
+    }
+    
+    &::placeholder {
+      color: var(--text-muted);
+    }
+  }
+  
+  .submit-btn {
+    background-color: var(--primary-color);
     color: white;
     padding: 1rem 2rem;
     border: none;
     font-weight: bold;
     cursor: pointer;
-    border-radius: 0.4rem;
-    font-size: 1rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-md);
     text-transform: uppercase;
-    transition: all 0.3s ease;
+    transition: var(--transition-normal);
+    
     &:hover {
-      background-color: #997af0;
+      background-color: var(--primary-light);
       transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(78, 14, 255, 0.4);
     }
   }
-  span {
-    color: white;
-    text-transform: uppercase;
+  
+  .switch-form {
+    color: var(--text-primary);
+    text-align: center;
+    font-size: var(--font-sm);
+    
     a {
-      color: #4e0eff;
+      color: var(--primary-color);
       text-decoration: none;
       font-weight: bold;
+      transition: var(--transition-normal);
+      margin-left: 0.5rem;
+      
+      &:hover {
+        color: var(--primary-light);
+        text-decoration: underline;
+      }
+    }
+  }
+  
+  @media screen and (max-width: 768px) {
+    form {
+      padding: 2rem;
+      width: 90%;
     }
   }
 `;
