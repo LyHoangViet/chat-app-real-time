@@ -4,14 +4,67 @@ const bcrypt = require("bcrypt");
 module.exports.login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
-    const user = await User.findOne({ username });
-    if (!user)
+    const trimmedUsername = username;
+    const user = await User.findOne({ trimmedUsername });
+    if (!user) {
+      // Kiểm tra đơn giản có chứa @
       return res.json({ msg: "Incorrect Username or Password", status: false });
+      //return res.json({ msg: " Incorrectly Username already used", status: false });
+    }
+    if (!user.email) {
+      return res.json({ msg: "Incorrect Username or Password", status: false });
+      //return res.json({ msg: " Incorrectly Username already used", status: false });
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid)
-      return res.json({ msg: "Incorrect Username or Password", status: false });
+
+    if (!isPasswordValid) {
+      return res.json({
+        msg: "Incorrect Username/Email or Password",
+        status: false,
+      });
+    }
+
+    // Xóa password khỏi đối tượng user trước khi trả về
     delete user.password;
     return res.json({ status: true, user });
+  } catch (ex) {
+    next(ex);
+  }
+};
+module.exports.LoginGG = async (req, res, next) => {
+  /*const { username } = req.body;
+  //const usernametrim = username.trim;
+  const trimmedUsername = await User.findOne({ username });
+  let user;
+  try {
+    if (trimmedUsername) {
+      // Kiểm tra đơn giản có chứa @
+
+      return res.json({ msg: "Username already used", status: false });
+    }
+    return res.json({ status: true, user });
+  } catch (ex) {
+    next(ex);
+  }
+};*/
+  try {
+    const { email, username, password } = req.body;
+    const emailcheck = await User.findOne({ $or: [{ email }, { username }] });
+
+    if (emailcheck) {
+      res.json({ emailcheck });
+    } else {
+      // Tạo người dùng mới
+      const newuser = await User.create({
+        email,
+        username,
+        password,
+
+        // Thêm các trường khác nếu cần
+      });
+      return res.status(201).json({ user: newuser });
+    }
   } catch (ex) {
     next(ex);
   }
@@ -57,13 +110,13 @@ module.exports.setAvatar = async (req, res, next) => {
   try {
     const userId = req.params.id;
     const avatarImage = req.body.image;
-    
+
     // Kiểm tra user có tồn tại không
     const userData = await User.findById(userId);
     if (!userData) {
-      return res.status(404).json({ 
-        msg: "User not found", 
-        status: false 
+      return res.status(404).json({
+        msg: "User not found",
+        status: false,
       });
     }
 
@@ -75,12 +128,12 @@ module.exports.setAvatar = async (req, res, next) => {
     return res.json({
       isSet: userData.isAvatarImageSet,
       image: userData.avatarImage,
-      status: true
+      status: true,
     });
   } catch (ex) {
-    return res.status(500).json({ 
-      msg: "Error updating avatar", 
-      status: false 
+    return res.status(500).json({
+      msg: "Error updating avatar",
+      status: false,
     });
   }
 };
