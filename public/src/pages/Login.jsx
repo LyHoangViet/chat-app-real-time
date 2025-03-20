@@ -6,7 +6,9 @@ import Logo from "../assets/logo.svg";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { loginRoute } from "../utils/APIRoutes";
-
+import { auth, fbProvider, ggProvider} from "../Firebase/config";
+import {signInWithPopup} from "firebase/auth";
+import { setUserRoute } from "../utils/APIRoutes";
 export default function Login() {
   const navigate = useNavigate();
   const [values, setValues] = useState({ username: "", password: "" });
@@ -22,7 +24,55 @@ export default function Login() {
       navigate("/");
     }
   }, []);
+  const handleLogin = async (provider) => {
+    signInWithPopup(auth, provider)
+      .then(async (result) => {
+        
+        try {
+         
+          const user = result.user;
+          if (user) {
+            // Người dùng đã đăng nhập
+            var userInfo = {
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL,
+              emailVerified: user.emailVerified
+            };
+            // Truy cập từng thuộc tính
+            console.log("UID:", userInfo.uid);
+            console.log("Email:", userInfo.email);
+            console.log("Username:", userInfo.displayName);
+            console.log("Ảnh đại diện:", userInfo.photoURL);
+            console.log("Email đã xác thực:", userInfo.emailVerified);
+          }
+          // Lấy thông tin người dùng từ backend
+          const response = await axios.post(setUserRoute, { 
+            email: user.email,
+            username: user.displayName,
+            password: user.uid,
 
+
+          
+          
+          });
+      
+          if (response.data.emailcheck) {
+            // Lưu thông tin người dùng từ backend vào localStorage
+            localStorage.setItem(process.env.REACT_APP_LOCALHOST_KEY, JSON.stringify(response.data.emailcheck));
+            navigate('/');
+          } else {
+            localStorage.setItem(process.env.REACT_APP_LOCALHOST_KEY, JSON.stringify(response.data.user));
+            // Nếu không tìm thấy người dùng, chuyển hướng đến setavatar
+            navigate('/');
+          }
+      
+        } catch (error) {
+          console.error('Login Error:', error);
+        }
+      });
+  };
   const handleChange = (event) => {
     setValues({ ...values, [event.target.name]: event.target.value });
   };
@@ -103,8 +153,8 @@ export default function Login() {
           <div className="social-login">
             <p>Or login with</p>
             <div className="social-icons">
-              <button type="button" className="social-icon google">G</button>
-              <button type="button" className="social-icon facebook">f</button>
+              <button type="button" onClick={() => handleLogin(ggProvider)} className="social-icon google">G</button>
+              <button type="button" onClick={() => handleLogin(fbProvider)} className="social-icon facebook">f</button>
               <button type="button" className="social-icon twitter">t</button>
             </div>
           </div>
