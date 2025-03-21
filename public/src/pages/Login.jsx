@@ -6,8 +6,8 @@ import Logo from "../assets/logo.svg";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { loginRoute } from "../utils/APIRoutes";
-import { auth, fbProvider, ggProvider} from "../Firebase/config";
-import {signInWithPopup} from "firebase/auth";
+import { auth, fbProvider, ggProvider } from "../Firebase/config";
+import { signInWithPopup } from "firebase/auth";
 import { setUserRoute } from "../utils/APIRoutes";
 export default function Login() {
   const navigate = useNavigate();
@@ -25,53 +25,40 @@ export default function Login() {
     }
   }, []);
   const handleLogin = async (provider) => {
-    signInWithPopup(auth, provider)
-      .then(async (result) => {
-        
-        try {
-         
-          const user = result.user;
-          if (user) {
-            // Người dùng đã đăng nhập
-            var userInfo = {
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL,
-              emailVerified: user.emailVerified
-            };
-            // Truy cập từng thuộc tính
-            console.log("UID:", userInfo.uid);
-            console.log("Email:", userInfo.email);
-            console.log("Username:", userInfo.displayName);
-            console.log("Ảnh đại diện:", userInfo.photoURL);
-            console.log("Email đã xác thực:", userInfo.emailVerified);
-          }
-          // Lấy thông tin người dùng từ backend
-          const response = await axios.post(setUserRoute, { 
-            email: user.email,
-            username: user.displayName,
-            password: user.uid,
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
 
+      if (user) {
+        const response = await axios.post(setUserRoute, {
+          email: user.email,
+          username: user.displayName,
+          password: user.uid,
+        });
 
-          
-          
-          });
-      
-          if (response.data.emailcheck) {
-            // Lưu thông tin người dùng từ backend vào localStorage
-            localStorage.setItem(process.env.REACT_APP_LOCALHOST_KEY, JSON.stringify(response.data.emailcheck));
-            navigate('/');
-          } else {
-            localStorage.setItem(process.env.REACT_APP_LOCALHOST_KEY, JSON.stringify(response.data.user));
-            // Nếu không tìm thấy người dùng, chuyển hướng đến setavatar
-            navigate('/');
-          }
-      
-        } catch (error) {
-          console.error('Login Error:', error);
+        if (response.data.emailcheck) {
+          localStorage.setItem(
+            process.env.REACT_APP_LOCALHOST_KEY,
+            JSON.stringify(response.data.emailcheck)
+          );
+        } else {
+          localStorage.setItem(
+            process.env.REACT_APP_LOCALHOST_KEY,
+            JSON.stringify(response.data.user)
+          );
         }
-      });
+
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Login Error:', error.message);
+      toast.error(
+        error.code === 'auth/popup-closed-by-user'
+          ? 'Đăng nhập bị hủy'
+          : 'Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.',
+        toastOptions
+      );
+    }
   };
   const handleChange = (event) => {
     setValues({ ...values, [event.target.name]: event.target.value });
