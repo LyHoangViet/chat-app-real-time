@@ -41,7 +41,6 @@ jobs:
           script: |
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
             export TAG=${{ github.ref_name }}
-            export REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}
             export CLIENT_URL=${{ secrets.CLIENT_URL }}
             export MONGODB_URI=mongodb://chat-app-real-time-mongodb-1:27017/chat-app
 
