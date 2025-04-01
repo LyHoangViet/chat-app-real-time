@@ -8,3 +8,5 @@ export const recieveMessageRoute = `${host}/api/messages/getmsg`;
 export const setAvatarRoute = `${host}/api/auth/setavatar`;
 export const deleteMessageRoute = `${host}/api/messages/delete`;
 export const setUserRoute = `${host}/api/auth/setuser`;
+// Thêm dòng này vào cuối file, sau các route hiện có
+export const clearChatRoute = `${host}/api/messages/clear-chat`;
