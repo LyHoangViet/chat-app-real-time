@@ -7,6 +7,7 @@ import { allUsersRoute, host } from "../utils/APIRoutes";
 import ChatContainer from "../components/ChatContainer";
 import Contacts from "../components/Contacts";
 import Welcome from "../components/Welcome";
+import { allGroupsRoute } from "../utils/APIRoutes";
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function Chat() {
   const [contacts, setContacts] = useState([]);
   const [currentChat, setCurrentChat] = useState(undefined);
   const [currentUser, setCurrentUser] = useState(undefined);
+  const [groups, setGroups] = useState([]);
   useEffect(async () => {
     if (!localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)) {
       navigate("/login");
@@ -36,20 +38,36 @@ export default function Chat() {
     if (currentUser) {
       if (currentUser.isAvatarImageSet) {
         const data = await axios.get(`${allUsersRoute}/${currentUser._id}`);
+       console.log("test", data.data)
         setContacts(data.data);
+        const groupsData = await axios.get(`${allGroupsRoute}/${currentUser._id}`);
+        console.log("test", groupsData.data)
+          setGroups(groupsData.data);
+      
       } else {
         navigate("/setAvatar");
       }
     }
   }, [currentUser]);
-  const handleChatChange = (chat) => {
-    setCurrentChat(chat);
+  const handleChatChange = (group) => {
+   
+      setCurrentChat(group);
   };
+    
+  
+//   const handleGrchange = (group) => {
+//    ``
+   
+//     setCurrentChat(group);
+  
+// };
   return (
     <>
       <Container>
         <div className="container">
-          <Contacts contacts={contacts} changeChat={handleChatChange} />
+          <Contacts groups={groups} contacts={contacts} changeChat={handleChatChange}  
+          
+          />
           {currentChat === undefined ? (
             <Welcome />
           ) : (

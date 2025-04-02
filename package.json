@@ -1,6 +1,10 @@
 {
   "dependencies": {
+    "clsx": "^2.1.1",
     "firebase": "^11.4.0",
-    "react-scripts": "^5.0.1"
+    "react-modal": "^3.16.3",
+    "react-scripts": "^5.0.1",
+    "styled-components": "^6.1.16",
+    "tailwind-merge": "^3.0.2"
   }
 }

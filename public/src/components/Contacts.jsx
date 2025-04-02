@@ -1,76 +1,126 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"; 
 import styled from "styled-components";
 import Logo from "../assets/logo.svg";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 
-export default function Contacts({ contacts, changeChat }) {
+const socket = io(process.env.REACT_APP_API_URL);
+
+export default function Contacts({ contacts, changeChat, groups }) {
   const [currentUserName, setCurrentUserName] = useState(undefined);
   const [currentUserImage, setCurrentUserImage] = useState(undefined);
   const [currentSelected, setCurrentSelected] = useState(undefined);
+  const [updatedGroups, setUpdatedGroups] = useState([]);
+
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const getData = async () => {
       const data = localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY);
       if (data) {
-        const userData = await JSON.parse(data);
+        const userData = JSON.parse(data);
         setCurrentUserName(userData.username);
         setCurrentUserImage(userData.avatarImage);
+        socket.emit("add-user", userData._id); 
+        console.log("🧩 Emit add-user:", userData._id);
       }
     };
     getData();
   }, []);
   
+  
+  
+
+  useEffect(() => {
+    if (Array.isArray(groups.groups)) {
+      setUpdatedGroups(groups.groups);
+    }
+  }, [groups]);
+
+  // Lắng nghe sự kiện khi được thêm vào nhóm mới
+  useEffect(() => {
+    const handleGroupAdded = (newGroup) => {
+      console.log("📥 Nhận được group mới qua socket:", newGroup); // 🔥 test tại đây
+  
+      setUpdatedGroups((prev) => {
+        const exists = prev.find((g) => g._id === newGroup._id);
+        return exists ? prev : [...prev, newGroup];
+      });
+    };
+  
+    socket.on("group-added", handleGroupAdded);
+  
+    return () => {
+      socket.off("group-added", handleGroupAdded);
+    };
+  }, []);
+  
+  
+  
+
+
+  const changeCurrentGroup = (index, group) =>{
+    setCurrentSelected(index);
+    changeChat(group);
+  }
+
   const changeCurrentChat = (index, contact) => {
     setCurrentSelected(index);
     changeChat(contact);
   };
-  
+
   const handleLogoClick = () => {
-    // Reset selected chat and navigate to home
     setCurrentSelected(undefined);
     changeChat(undefined);
   };
-  
+
   return (
     <>
-      {currentUserImage && currentUserImage && (
+      {currentUserImage && currentUserName && (
         <Container>
           <div className="brand" onClick={handleLogoClick}>
             <img src={Logo} alt="logo" />
-            <h3>Duckee</h3>
+            <h3>ChatMess</h3>
           </div>
           <div className="contacts">
-            {contacts.map((contact, index) => {
-              return (
-                <div
-                  key={contact._id}
-                  className={`contact ${
-                    index === currentSelected ? "selected" : ""
-                  }`}
-                  onClick={() => changeCurrentChat(index, contact)}
-                >
-                  <div className="avatar">
-                    <img
-                      src={`data:image/svg+xml;base64,${contact.avatarImage}`}
-                      alt=""
-                    />
-                  </div>
-                  <div className="username">
-                    <h3>{contact.username}</h3>
-                  </div>
+            {Array.isArray(contacts) && contacts.map((contact, index) => (
+              <div
+                key={contact._id}
+                className={`contact ${index === currentSelected ? "selected" : ""}`}
+                onClick={() => changeCurrentChat(index, contact)}
+              >
+                <div className="avatar">
+                  <img src={`data:image/svg+xml;base64,${contact.avatarImage}`} alt="" />
                 </div>
-              );
-            })}
+                <div className="username">
+                  <h3>{contact.username}</h3>
+                </div>
+              </div>
+            ))}
+            
+
+            {Array.isArray(updatedGroups) && updatedGroups.map((group, index) => (
+              <div
+                key={group._id}
+                className={`contact ${index === currentSelected ? "selected" : ""}`}
+                onClick={() => changeCurrentGroup(index, group)}
+              >
+                <div className="avatar">
+                  <img src={`data:image/jpeg;base64,${group.avatarImage}`} alt={group.name} />
+                </div>
+                <div className="username">
+                  <h3>{group.name}</h3>
+                </div>
+              </div>
+            ))}
           </div>
           <div className="current-user">
             <div className="avatar">
-              <img
-                src={`data:image/svg+xml;base64,${currentUserImage}`}
-                alt="avatar"
-              />
+              <img src={`data:image/svg+xml;base64,${currentUserImage}`} alt="avatar" />
             </div>
             <div className="username">
+            
+  
               <h2>{currentUserName}</h2>
             </div>
           </div>
@@ -79,6 +129,9 @@ export default function Contacts({ contacts, changeChat }) {
     </>
   );
 }
+
+
+
 
 const Container = styled.div`
   display: grid;
@@ -117,7 +170,7 @@ const Container = styled.div`
       transition: var(--transition-normal);
     }
   }
-  
+
   .contacts {
     display: flex;
     flex-direction: column;
@@ -134,7 +187,7 @@ const Container = styled.div`
         border-radius: 1rem;
       }
     }
-    
+
     .contact {
       background-color: #ffffff34;
       min-height: 5rem;
@@ -155,14 +208,14 @@ const Container = styled.div`
           transition: var(--transition-normal);
         }
       }
-      
+
       .username {
         h3 {
           color: white;
           font-size: var(--font-md);
         }
       }
-      
+
       &:hover {
         background-color: #9a86f3;
         transform: translateX(5px);
@@ -172,7 +225,7 @@ const Container = styled.div`
         }
       }
     }
-    
+
     .selected {
       background-color: #9a86f3;
     }
@@ -192,7 +245,7 @@ const Container = styled.div`
     &:hover {
       background-color: #1a1a4d;
     }
-    
+
     .avatar {
       img {
         height: 3.5rem;
@@ -201,14 +254,14 @@ const Container = styled.div`
         border: 2px solid var(--primary-color);
       }
     }
-    
+
     .username {
       h2 {
         color: white;
         font-size: var(--font-lg);
       }
     }
-    
+
     @media screen and (min-width: 720px) and (max-width: 1080px) {
       gap: 0.5rem;
       .username {

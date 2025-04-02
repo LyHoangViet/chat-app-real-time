@@ -52,10 +52,7 @@ export default function Login() {
             email: user.email,
             username: user.displayName,
             password: user.uid,
-
-
-          
-          
+        
           });
       
           if (response.data.emailcheck) {

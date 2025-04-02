@@ -4,31 +4,95 @@ import Robot from "../assets/robot.gif";
 import Logout from "./Logout";
 import { FaUserFriends, FaComments, FaSearch } from 'react-icons/fa';
 import { useNavigate } from "react-router-dom";
+import CreateGroupModal from "./CreateGroupModal";
+import { createdGroupRoute } from "../utils/APIRoutes";
+import axios from "axios";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { io } from "socket.io-client";
+
+const socket = io(process.env.REACT_APP_API_URL);
 
 export default function Welcome() {
   const [userName, setUserName] = useState("");
+  const [userId, setUserId] = useState("");
   const [timeOfDay, setTimeOfDay] = useState("");
   const navigate = useNavigate();
-  
-  useEffect(async () => {
-    const userData = await JSON.parse(
-      localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-    );
-    setUserName(userData.username);
-    
-    // Set time of day greeting
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleCreateGroupClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  function toBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64Data = reader.result.split(",")[1];
+        resolve(base64Data);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  }
+
+  const handleCreateGroup = async (groupName, groupImage) => {
+    setIsLoading(true);
+    try {
+      const base64Image = await toBase64(groupImage);
+      const userData = await JSON.parse(
+        localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
+      );
+      const response = await axios.post(createdGroupRoute, {
+        name: groupName,
+        createdBy: userData._id,
+        members: [{ user: userData._id, role: "admin" }],
+        avatarImage: base64Image,
+      });
+
+      if (response.data.status && response.data.group) {
+        toast.success("Group created successfully!");
+        socket.emit("group-added", response.data.group); // Emit để cập nhật UI client bên Contact
+        handleCloseModal();
+      } else {
+        toast.error(response.data.msg || "Failed to create group.");
+      }
+    } catch (error) {
+      toast.error("Error creating group. Please try again.");
+      console.error("Error creating group:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const userData = await JSON.parse(
+        localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
+      );
+      setUserName(userData.username);
+      setUserId(userData._id);
+      socket.emit("add-user", userData._id);
+    };
+    fetchUser();
+
     const hour = new Date().getHours();
     if (hour < 12) setTimeOfDay("Good morning");
     else if (hour < 18) setTimeOfDay("Good afternoon");
     else setTimeOfDay("Good evening");
   }, []);
-  
+
   return (
     <Container>
       <div className="logout-button">
         <Logout />
       </div>
-      
+
       <div className="welcome-content">
         <img src={Robot} alt="Robot welcome" className="welcome-image" />
         <h1>
@@ -37,7 +101,7 @@ export default function Welcome() {
         <p className="welcome-message">
           Select a chat to start messaging or explore the features below
         </p>
-        
+
         <div className="feature-cards">
           <div className="feature-card">
             <div className="feature-icon">
@@ -46,15 +110,15 @@ export default function Welcome() {
             <h3>Find Friends</h3>
             <p>Connect with new people</p>
           </div>
-          
-          <div className="feature-card">
+
+          <div className="feature-card" onClick={handleCreateGroupClick}>
             <div className="feature-icon">
               <FaComments />
             </div>
             <h3>Group Chat</h3>
             <p>Create group conversations</p>
           </div>
-          
+
           <div className="feature-card">
             <div className="feature-icon">
               <FaSearch />
@@ -63,10 +127,22 @@ export default function Welcome() {
             <p>Discover new connections</p>
           </div>
         </div>
+
+        <CreateGroupModal
+          isOpen={isModalOpen}
+          onRequestClose={handleCloseModal}
+          onCreateGroup={handleCreateGroup}
+          isLoading={isLoading}
+        />
       </div>
+
+      <ToastContainer />
     </Container>
   );
 }
+
+
+
 
 const Container = styled.div`
   display: flex;
@@ -209,3 +285,5 @@ const Container = styled.div`
     }
   }
 `;
+
+

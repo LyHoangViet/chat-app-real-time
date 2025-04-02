@@ -4,8 +4,11 @@ import ChatInput from "./ChatInput";
 import Logout from "./Logout";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import { sendMessageRoute, recieveMessageRoute, deleteMessageRoute } from "../utils/APIRoutes";
+import { sendMessageRoute, recieveMessageRoute, deleteMessageRoute, checkroleRoute, addMemberRouter , removeMemberRouter} from "../utils/APIRoutes";
 import { FaPhone, FaVideo, FaEllipsisV, FaSearch } from "react-icons/fa";
+import AddMemberModal from "./AddMemberModal";
+import { toast } from "react-toastify";
+import RemoveMemberModal from "./RemoveMemberModal"
 
 export default function ChatContainer({ currentChat, socket }) {
   const [messages, setMessages] = useState([]);
@@ -13,145 +16,213 @@ export default function ChatContainer({ currentChat, socket }) {
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [showCallOptions, setShowCallOptions] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpens, setIsModalOpens] = useState(false);
+  const [members, setMembers] = useState([]);
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        console.log("GroupID:",currentChat._id)
+        const response = await axios.get(`${removeMemberRouter}/${currentChat._id}`);
+        setMembers(response.data.members);
+        console.log(response.data.members); // Lưu vào state members
+      } catch (error) {
+        console.error("Error fetching members:", error);
+      }
+    };
+
+    fetchMembers();
+  }, [currentChat._id]); // Gọi lại API khi groupId thay đổi
+
+  const handleRemoveMember = (email) => {
+    console.log("Xóa thành viên với email:", email);
+    // Thực hiện gọi API xóa thành viên khỏi nhóm tại đây
+  };
+
+  const handleOpenModals = () => {
+    setIsModalOpens(true);
+  };
+
+  const handleCloseModals = () => {
+    setIsModalOpens(false);
+  };
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        setUserRole(null);
+        const storedData = localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY);
+        if (!storedData) {
+          console.error("Không tìm thấy dữ liệu người dùng trong localStorage.");
+          return;
+        }
+  
+        const parsedData = JSON.parse(storedData);
+        const response = await axios.get(
+          `${checkroleRoute}/${currentChat._id}/${parsedData._id}`
+        );
+  
+        console.log("role", response.data.role);
+        setUserRole(response.data.role);
+      } catch (error) {
+        console.error("Lỗi khi lấy vai trò người dùng:", error);
+      }
+    };
+  
+    if (currentChat) {
+      fetchUserRole();
+    }
+  }, [currentChat?._id]);
+  const handleAddMember = async (memberEmail) => {
+    try {
+      const response = await axios.post(
+        addMemberRouter,
+        {
+          email: memberEmail,
+          groupId: currentChat._id,
+        },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      if (response.data.status) {
+        toast.success("Member added successfully!",);
+        handleCloseModal();
+      } else {
+        toast.error(response.data.msg || "Failed to add member.");
+      }
+    } catch (error) {
+      console.error("Error adding member:", error);
+      toast.error("An error occurred while adding member.");
+    }
+  };
+
+
 
   useEffect(() => {
     const fetchMessages = async () => {
       if (!currentChat) return;
-      
-      const data = await JSON.parse(
-        localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-      );
+      const data = JSON.parse(localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY));
       const response = await axios.post(recieveMessageRoute, {
         from: data._id,
         to: currentChat._id,
       });
       setMessages(response.data);
     };
-    
     fetchMessages();
   }, [currentChat]);
 
   useEffect(() => {
-    const getCurrentChat = async () => {
-      if (currentChat) {
-        await JSON.parse(
-          localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-        )._id;
-      }
-    };
-    getCurrentChat();
-  }, [currentChat]);
-
-  const handleSendMsg = async (msg, type = "text") => {
-    const data = await JSON.parse(
-      localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-    );
-    
-    socket.current.emit("send-msg", {
-      to: currentChat._id,
-      from: data._id,
-      msg,
-      type,
-    });
-    
-    // Gửi tin nhắn và lấy response từ server
-    const response = await axios.post(sendMessageRoute, {
-      from: data._id,
-      to: currentChat._id,
-      message: msg,
-      type: type
-    });
-
-    // Thêm tin nhắn mới với _id từ response
-    const msgs = [...messages];
-    msgs.push({ 
-      fromSelf: true, 
-      message: msg, 
-      type: type,
-      _id: response.data.messageId // Thêm _id từ response
-    });
-    setMessages(msgs);
-  };
-
-  useEffect(() => {
-    if (socket.current) {
-      socket.current.on("msg-recieve", (msg) => {
-        setArrivalMessage({ fromSelf: false, message: msg });
-      });
-
-      // Thêm listener cho sự kiện msg-deleted
-      socket.current.on("msg-deleted", (messageId) => {
-        setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
-      });
+    if (arrivalMessage) {
+      setMessages((prev) => [...prev, arrivalMessage]);
     }
-
-    // Cleanup function
-    return () => {
-      if (socket.current) {
-        socket.current.off("msg-recieve");
-        socket.current.off("msg-deleted"); // Đừng quên cleanup
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    arrivalMessage && setMessages((prev) => [...prev, arrivalMessage]);
   }, [arrivalMessage]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Kiểm tra xem một tin nhắn có phải là ảnh hay không
-  const isImageMessage = (message) => {
-    return (
-      message.type === "image" || 
-      (typeof message.message === 'string' && message.message.startsWith('data:image'))
-    );
+  useEffect(() => {
+    if (socket.current) {
+      socket.current.on("msg-recieve", (msgData) => {
+        const isGroupMessage = msgData.to === currentChat._id;
+        if (isGroupMessage) {
+          setArrivalMessage({ fromSelf: false, message: msgData.msg });
+        }
+      });
+
+      socket.current.on("msg-deleted", (messageId) => {
+        setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+      });
+
+      socket.current.on("msg-updated", ({ messageId, newContent }) => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg._id === messageId ? { ...msg, message: newContent } : msg
+          )
+        );
+      });
+    }
+
+    return () => {
+      if (socket.current) {
+        socket.current.off("msg-recieve");
+        socket.current.off("msg-deleted");
+        socket.current.off("msg-updated");
+      }
+    };
+  }, [currentChat?._id]);
+
+  const handleSendMsg = async (msg, type = "text") => {
+    const data = JSON.parse(localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY));
+
+    const payload = {
+      to: currentChat._id,
+      from: data._id,
+      msg,
+      type,
+      isGroup: true,
+    };
+
+    socket.current.emit("send-msg", payload);
+
+    const response = await axios.post(sendMessageRoute, {
+      from: data._id,
+      to: currentChat._id,
+      message: msg,
+      type,
+      isGroup: true,
+    });
+
+    const msgs = [...messages];
+    msgs.push({
+      fromSelf: true,
+      message: msg,
+      type,
+      _id: response.data.messageId,
+    });
+    setMessages(msgs);
   };
 
-  // Tạo một hàm để xử lý hiển thị avatar 
-  const getAvatarSrc = (avatarImage) => {
-    if (!avatarImage) return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23cccccc'/%3E%3C/svg%3E";
-    
-    if (avatarImage.startsWith('data:')) return avatarImage;
-    
-    return `data:image/svg+xml;base64,${avatarImage}`;
-  };
-
-  // Thêm hàm xử lý xóa tin nhắn
   const handleDeleteMessage = async (messageId) => {
     try {
       if (!messageId) return;
       const response = await axios.delete(`${deleteMessageRoute}/${messageId}`);
-      
       if (response.status === 200) {
-        // Xóa tin nhắn ở phía người gửi
-        setMessages(prev => prev.filter(msg => msg._id !== messageId));
-        
-        // Gửi sự kiện xóa tới người nhận
+        setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
         socket.current.emit("delete-msg", {
           to: currentChat._id,
-          messageId: messageId
+          messageId,
         });
       }
     } catch (error) {
-      console.error("Error deleting message:", error.response?.data || error.message);
+      console.error("Error deleting message:", error);
     }
   };
 
-  const handleCall = () => {
-    // Implement call functionality
-    alert("Voice call feature will be implemented soon!");
+  const getAvatarSrc = (avatarImage) => {
+    if (!avatarImage) return null;
+    if (avatarImage.startsWith("data:image/")) return avatarImage;
+    const base64Header = avatarImage.substring(0, 10);
+    if (base64Header.startsWith("/9j/")) return `data:image/jpeg;base64,${avatarImage}`;
+    if (base64Header.startsWith("iVBORw0KGgo")) return `data:image/png;base64,${avatarImage}`;
+    if (base64Header.startsWith("R0lGODdh") || base64Header.startsWith("R0lGODlh")) return `data:image/gif;base64,${avatarImage}`;
+    if (base64Header.startsWith("UklGR")) return `data:image/webp;base64,${avatarImage}`;
+    if (avatarImage.trim().startsWith("<svg")) {
+      const base64Svg = btoa(unescape(encodeURIComponent(avatarImage)));
+      return `data:image/svg+xml;base64,${base64Svg}`;
+    }
+    return `data:image/svg+xml;;base64,${avatarImage}`;
   };
 
-  const handleVideoCall = () => {
-    // Implement video call functionality
-    alert("Video call feature will be implemented soon!");
-  };
+  const handleCall = () => alert("Voice call feature will be implemented soon!");
+  const handleVideoCall = () => alert("Video call feature will be implemented soon!");
+  const toggleCallOptions = () => setShowCallOptions(!showCallOptions);
 
-  const toggleCallOptions = () => {
-    setShowCallOptions(!showCallOptions);
+  const isImageMessage = (message) => {
+    return message.type === "image" || (typeof message.message === "string" && message.message.startsWith("data:image"));
   };
 
   return (
@@ -161,18 +232,16 @@ export default function ChatContainer({ currentChat, socket }) {
           <div className="avatar">
             <img
               src={getAvatarSrc(currentChat.avatarImage)}
-              alt={currentChat.username || "User"}
+              alt=""
               onError={(e) => {
-                console.log("Avatar load error");
                 e.target.onerror = null;
-                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23cccccc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff'%3E" + 
-                  (currentChat.username ? currentChat.username.charAt(0).toUpperCase() : '?') + 
-                  "%3C/text%3E%3C/svg%3E";
+                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23cccccc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff'%3E" +
+                  (currentChat.name ? currentChat.name.charAt(0).toUpperCase() : "?") + "%3C/text%3E%3C/svg%3E";
               }}
             />
           </div>
           <div className="username">
-            <h3>{currentChat.username}</h3>
+            <h3>{currentChat.username || currentChat.name}</h3>
             <div className="status">
               <div className="status-indicator"></div>
               <span>Online</span>
@@ -180,48 +249,48 @@ export default function ChatContainer({ currentChat, socket }) {
           </div>
         </div>
         <div className="chat-actions">
-          <button className="action-button search-button">
-            <FaSearch />
-          </button>
-          <button className="action-button call-button" onClick={handleCall}>
-            <FaPhone />
-          </button>
-          <button className="action-button video-button" onClick={handleVideoCall}>
-            <FaVideo />
-          </button>
+          <button className="action-button search-button"><FaSearch /></button>
+          <button className="action-button call-button" onClick={handleCall}><FaPhone /></button>
+          <button className="action-button video-button" onClick={handleVideoCall}><FaVideo /></button>
           <div className="more-options">
-            <button className="action-button more-button" onClick={toggleCallOptions}>
-              <FaEllipsisV />
-            </button>
+            <button className="action-button more-button" onClick={toggleCallOptions}><FaEllipsisV /></button>
             {showCallOptions && (
               <div className="options-dropdown">
                 <ul>
                   <li>View Profile</li>
                   <li>Mute Notifications</li>
                   <li>Block User</li>
-                  <li>Clear Chat</li>
+                  {userRole === "admin" && <li onClick={handleOpenModal}>Add Member</li>}
+                  {userRole === "admin" && <li onClick={handleOpenModals}>Remove Member</li>}
                 </ul>
+                <RemoveMemberModal
+        isOpen={isModalOpens}
+        onRequestClose={handleCloseModals}
+        members={members} // Truyền danh sách thành viên vào modal
+        onRemoveMember={handleRemoveMember} // Hàm xử lý xóa thành viên
+      />
+                <AddMemberModal isOpen={isModalOpen} onClose={handleCloseModal} onAddMember={handleAddMember} />
               </div>
             )}
           </div>
           <Logout />
         </div>
       </div>
+
       <div className="chat-messages">
         {messages.map((message) => {
           const isImage = isImageMessage(message);
           return (
             <div ref={scrollRef} key={message._id || uuidv4()}>
               <div className={`message ${message.fromSelf ? "sended" : "recieved"}`}>
-                <div className={`content ${isImage ? 'image-content' : ''}`}>
+                <div className={`content ${isImage ? "image-content" : ""}`}>
                   {isImage ? (
-                    <img 
-                      src={message.message} 
+                    <img
+                      src={message.message}
                       alt="Chat content"
                       className="chat-image"
                       onClick={() => setSelectedImage(message.message)}
                       onError={(e) => {
-                        console.error("Image load failed");
                         e.target.onerror = null;
                         e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999999'%3EImage Error%3C/text%3E%3C/svg%3E";
                       }}
@@ -230,12 +299,7 @@ export default function ChatContainer({ currentChat, socket }) {
                     <p>{message.message}</p>
                   )}
                   {message.fromSelf && (
-                    <button 
-                      className="delete-btn"
-                      onClick={() => handleDeleteMessage(message._id)}
-                    >
-                      ×
-                    </button>
+                    <button className="delete-btn" onClick={() => handleDeleteMessage(message._id)}>×</button>
                   )}
                 </div>
               </div>
@@ -243,15 +307,14 @@ export default function ChatContainer({ currentChat, socket }) {
           );
         })}
       </div>
+
       <ChatInput handleSendMsg={handleSendMsg} />
 
       {selectedImage && (
-        <ImageModal>
-          <div className="modal-content">
-            <span className="close-button" onClick={() => setSelectedImage(null)}>×</span>
-            <img src={selectedImage} alt="Enlarged view" />
-          </div>
-        </ImageModal>
+        <div className="modal-content">
+          <span className="close-button" onClick={() => setSelectedImage(null)}>×</span>
+          <img src={selectedImage} alt="Enlarged view" />
+        </div>
       )}
     </Container>
   );
@@ -554,4 +617,3 @@ const ImageModal = styled.div`
     to { transform: scale(1); }
   }
 `;
-
