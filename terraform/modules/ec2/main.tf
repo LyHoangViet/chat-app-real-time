@@ -7,8 +7,14 @@ resource "aws_instance" "ec2_instances" {
   key_name               = var.key_name
   subnet_id              = each.value.subnet_id
   vpc_security_group_ids = each.value.security_group_ids
+  
+  root_block_device {
+    volume_size = 30
+    volume_type = "gp3"
+    encrypted   = true
+  }
 
-   user_data = <<-EOF
+  user_data = <<-EOF
     #!/bin/bash
     sudo apt update -y
     sudo apt upgrade -y
@@ -25,11 +31,7 @@ resource "aws_instance" "ec2_instances" {
     sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
     # Clone Git repository
-    git clone https://github.com/LyHoangViet/chat-app-real-time.git
-
-    # Run docker compose
-    
-
+    git clone https://github.com/LyHoangViet/chat-app-real-time.git /home/ubuntu/chat-app-real-time
   EOF
 
   tags = {
