@@ -38,21 +38,16 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: IMAGE_NAME
-          env:
-            IMAGE_NAME: ${{ env.IMAGE_NAME }}
           script: |
             sudo docker network create chat-app-real-time_app-network || true
-            sudo docker pull ${IMAGE_NAME}
+            sudo docker pull ${{ env.IMAGE_NAME }}
             sudo docker stop ${{ secrets.BACKEND_CONTAINER_NAME }} || true
             sudo docker rm ${{ secrets.BACKEND_CONTAINER_NAME }} || true
-            echo "IMAGE_NAME value: ${IMAGE_NAME}"
-            sudo docker images
             sudo docker run -d \
               --name ${{ secrets.BACKEND_CONTAINER_NAME }} \
               --network chat-app-real-time_app-network \
               -p ${{ secrets.BACKEND_PORT }}:5000 \
               -e PORT=5000 \
               -e CLIENT_URL=${{ secrets.CLIENT_URL }} \
-              -e MONGODB_URI=${{ secrets.MONGODB_URI }} \
-              ${IMAGE_NAME}
+              -e "MONGODB_URI=${{ secrets.MONGODB_URI }}" \
+              ${{ env.IMAGE_NAME }}
