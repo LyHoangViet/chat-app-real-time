@@ -4,7 +4,7 @@ import ChatInput from "./ChatInput";
 import Logout from "./Logout";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import { sendMessageRoute, recieveMessageRoute, deleteMessageRoute } from "../utils/APIRoutes";
+import { sendMessageRoute, recieveMessageRoute, deleteMessageRoute, clearChatRoute } from "../utils/APIRoutes";
 import { FaPhone, FaVideo, FaEllipsisV, FaSearch } from "react-icons/fa";
 
 export default function ChatContainer({ currentChat, socket }) {
@@ -154,6 +154,29 @@ export default function ChatContainer({ currentChat, socket }) {
     setShowCallOptions(!showCallOptions);
   };
 
+  // Thêm hàm xử lý xóa lịch sử chat
+  const handleClearChat = async () => {
+    try {
+      const data = await JSON.parse(
+        localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
+      );
+      
+      const response = await axios.post(clearChatRoute, {
+        from: data._id,
+        to: currentChat._id,
+      });
+      
+      if (response.data) {
+        // Xóa tin nhắn khỏi state hiện tại
+        setMessages([]);
+        // Đóng menu tùy chọn
+        setShowCallOptions(false);
+      }
+    } catch (error) {
+      console.error("Lỗi khi xóa lịch sử trò chuyện:", error);
+    }
+  };
+
   return (
     <Container>
       <div className="chat-header">
@@ -199,7 +222,8 @@ export default function ChatContainer({ currentChat, socket }) {
                   <li>View Profile</li>
                   <li>Mute Notifications</li>
                   <li>Block User</li>
-                  <li>Clear Chat</li>
+                  {/* Cập nhật để gọi hàm handleClearChat khi click */}
+                  <li onClick={handleClearChat}>Clear Chat</li>
                 </ul>
               </div>
             )}
