@@ -43,6 +43,7 @@ jobs:
             sudo docker pull ${{ env.IMAGE_NAME }}
             sudo docker stop ${{ secrets.BACKEND_CONTAINER_NAME }} || true
             sudo docker rm ${{ secrets.BACKEND_CONTAINER_NAME }} || true
+            echo "IMAGE_NAME value: ${{ env.IMAGE_NAME }}"
             sudo docker images
             sudo docker run -d \
               --name ${{ secrets.BACKEND_CONTAINER_NAME }} \
