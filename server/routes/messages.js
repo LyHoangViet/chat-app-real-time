@@ -43,6 +43,7 @@ router.post("/getmsg", async (req, res, next) => {
       users: {
         $all: [from, to],
       },
+      deletedFor: { $ne: from }
     }).sort({ updatedAt: 1 });
 
     const projectedMessages = messages.map((msg) => {
@@ -70,6 +71,36 @@ router.delete("/delete/:id", async (req, res) => {
   } catch (err) {
     console.error("Delete error:", err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.post("/clear-chat", async (req, res, next) => {
+  try {
+    const { from, to } = req.body;
+
+    if (!from || !to) {
+      return res.status(400).json({ msg: "Thiếu thông tin người gửi hoặc người nhận" });
+    }
+
+    // Cập nhật tất cả tin nhắn giữa hai người, thêm userId vào mảng deletedFor
+    const result = await Messages.updateMany(
+      {
+        users: {
+          $all: [from, to]
+        }
+      },
+      {
+        $addToSet: { deletedFor: from }
+      }
+    );
+
+    return res.json({ 
+      msg: "Đã xóa lịch sử cuộc trò chuyện thành công",
+      modifiedCount: result.modifiedCount
+    });
+  } catch (ex) {
+    console.error("Clear chat error:", ex);
+    next(ex);
   }
 });
 
