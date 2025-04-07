@@ -7,6 +7,7 @@ resource "aws_instance" "ec2_instances" {
   key_name               = var.key_name
   subnet_id              = each.value.subnet_id
   vpc_security_group_ids = each.value.security_group_ids
+  iam_instance_profile = var.iam_profile
   
   root_block_device {
     volume_size = 30

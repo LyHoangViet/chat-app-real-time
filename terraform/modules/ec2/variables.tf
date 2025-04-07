@@ -18,6 +18,11 @@ variable "compute_root_name" {
   type        = string
 }
 
+variable "iam_profile" {
+  description = "IAM role of ec2"
+  type        = string
+}
+
 variable "ec2_instances" {
   description = "A list of EC2 instances to create"
   type = list(object({

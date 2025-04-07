@@ -49,3 +49,21 @@ output "igw_id" {
 output "igw_arn" {
   value = aws_internet_gateway.igw.arn
 }
+
+# Output route table public
+output "route_table_public_id" {
+  value = aws_route_table.public_route_table_1.id
+}
+
+output "route_table_public_arn" {
+  value = aws_route_table.public_route_table_1.arn
+}
+
+# Output route table private
+output "route_table_private_id" {
+  value = aws_route_table.private_route_table_1.id
+}
+
+output "route_table_private_arn" {
+  value = aws_route_table.private_route_table_1.arn
+}

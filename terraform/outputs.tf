@@ -55,3 +55,25 @@ output "alb_dns_name" {
 output "listener_arn" {
   value = module.alb.listener_arn
 }
+
+# IAM
+output "policy_id" {
+  value = module.iam.policy_id
+}
+
+output "policy_arn" {
+  value = module.iam.policy_arn
+}
+
+output "role_id" {
+  value = module.iam.role_id
+}
+
+output "role_arn" {
+  value = module.iam.role_arn
+}
+
+output "iam_profile" {
+  value = module.iam.iam_profile
+}
+
