@@ -4,16 +4,21 @@ const bcrypt = require("bcrypt");
 module.exports.login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
-    const trimmedUsername = username;
-    const user = await User.findOne({ trimmedUsername });
-    if (!user) {
-      // Kiểm tra đơn giản có chứa @
-      return res.json({ msg: "Incorrect Username or Password", status: false });
-      //return res.json({ msg: " Incorrectly Username already used", status: false });
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername) {
+      return res.json({ msg: "Username cannot be empty", status: false });
     }
-    if (!user.email) {
-      return res.json({ msg: "Incorrect Username or Password", status: false });
-      //return res.json({ msg: " Incorrectly Username already used", status: false });
+
+    const user = await User.findOne({
+      $or: [{ username: trimmedUsername }, { email: trimmedUsername }],
+    });
+
+    if (!user) {
+      return res.json({
+        msg: "Incorrect Username/Email or Password",
+        status: false,
+      });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -25,7 +30,6 @@ module.exports.login = async (req, res, next) => {
       });
     }
 
-    // Xóa password khỏi đối tượng user trước khi trả về
     delete user.password;
     return res.json({ status: true, user });
   } catch (ex) {
@@ -33,21 +37,6 @@ module.exports.login = async (req, res, next) => {
   }
 };
 module.exports.LoginGG = async (req, res, next) => {
-  /*const { username } = req.body;
-  //const usernametrim = username.trim;
-  const trimmedUsername = await User.findOne({ username });
-  let user;
-  try {
-    if (trimmedUsername) {
-      // Kiểm tra đơn giản có chứa @
-
-      return res.json({ msg: "Username already used", status: false });
-    }
-    return res.json({ status: true, user });
-  } catch (ex) {
-    next(ex);
-  }
-};*/
   try {
     const { email, username, password } = req.body;
     const emailcheck = await User.findOne({ $or: [{ email }, { username }] });
@@ -55,13 +44,10 @@ module.exports.LoginGG = async (req, res, next) => {
     if (emailcheck) {
       res.json({ emailcheck });
     } else {
-      // Tạo người dùng mới
       const newuser = await User.create({
         email,
         username,
         password,
-
-        // Thêm các trường khác nếu cần
       });
       return res.status(201).json({ user: newuser });
     }
@@ -120,7 +106,6 @@ module.exports.setAvatar = async (req, res, next) => {
       });
     }
 
-    // Cập nhật thông tin avatar
     userData.isAvatarImageSet = true;
     userData.avatarImage = avatarImage;
     await userData.save();
