@@ -138,8 +138,6 @@ export default function Login() {
             <p>Or login with</p>
             <div className="social-icons">
               <button type="button" onClick={() => handleLogin(ggProvider)} className="social-icon google">G</button>
-              <button type="button" onClick={() => handleLogin(fbProvider)} className="social-icon facebook">f</button>
-              <button type="button" className="social-icon twitter">t</button>
             </div>
           </div>
           <span className="switch-form">
